@@ -108,7 +108,8 @@ yarg
         default: false,
       });
       yargs.option('no-monorepo', {
-        describe: 'without creating a monorepo, keep the v2 addon and test app in the same package folder',
+        describe:
+          'without creating a monorepo, keep the v2 addon and test app in the same package folder',
         type: 'boolean',
         default: false,
       });
