@@ -26,7 +26,7 @@ export async function installV2Blueprint(info) {
     `npx ember-cli@^4.10.0 addon ${info.name}` +
       ` --blueprint @embroider/addon-blueprint` +
       (info.noMonorepo
-        ? '--addon-only'
+        ? ` --addon-only`
         : ` --test-app-location=${info.testAppLocation}` +
           ` --test-app-name=${info.testAppName}` +
           ` --addon-location=${info.addonLocation}`) +

@@ -12,13 +12,6 @@ import path from 'node:path';
 /**
  * @param {Info} info
  */
-export async function migrateFilesToNonMonorepo(info) {
-  await migrateAddon(info);
-}
-
-/**
- * @param {Info} info
- */
 export async function migrateAddon(info) {
   let addonFolder = path.join(info.tmpLocation, 'addon');
   let testSupportFolder = path.join(info.tmpLocation, 'addon-test-support');

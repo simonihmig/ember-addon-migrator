@@ -29,9 +29,10 @@ yargs(hideBin(process.argv))
     ['output [name]'],
     'outputs a fixture to a tmp directory',
     (yargs) => {
-      return yargs.positional('name', {
-        description: 'the name of the fixture to copy',
-      });
+      return yargs
+        .positional('name', {
+          description: 'the name of the fixture to copy',
+        });
     },
     async (argv) => {
       info('Copying fixture to tmp directory');

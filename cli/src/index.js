@@ -5,13 +5,14 @@ import assert from 'node:assert';
 import path from 'node:path';
 import util from 'node:util';
 
-import { migrateAddon, migrateFilesToNonMonorepo } from './addon.js';
+import { migrateAddon } from './addon.js';
 import { AddonInfo } from './analysis/index.js';
 import { resolvedDirectory } from './analysis/paths.js';
+import { VERBOSE } from './env.js';
 import { lintFix } from './lint.js';
 import { error, info } from './log.js';
 import { prepare } from './prepare.js';
-import { migrateTestApp } from './test-app.js';
+import { migrateTestApp, moveTests } from './test-app.js';
 import { installV2Blueprint } from './v2-blueprint.js';
 import { install, updateRootFiles } from './workspaces.js';
 
@@ -55,11 +56,20 @@ export default async function run(options) {
       },
       {
         title: 'Running package manager',
-        task: () => install(analysis, { hidden: true }),
+        task: () => install(analysis, { hidden: !VERBOSE, cwd: analysis.packageManagerRoot }),
       },
       {
         title: 'Running lint:fix',
         task: () => {
+          if (options.noMonorepo) {
+            return new Listr([
+              {
+                title: `lint:fix`,
+                task: () => lintFix(analysis, analysis.addonLocation),
+              },
+            ]);
+          }
+
           return new Listr([
             {
               title: `lint:fix on ${analysis.name}`,
@@ -162,12 +172,21 @@ function runSolorepoMigrator(analysis) {
       task: () => prepare(analysis),
     },
     {
-      title: 'Installing the V2 Addon Blueprint',
+      title: 'Installing the V2 Addon Blueprint as non-monorepo',
       task: () => installV2Blueprint(analysis),
     },
     {
       title: 'Migrating files',
-      task: () => migrateFilesToNonMonorepo(analysis),
+      task: async () => {
+        await migrateAddon(analysis);
+        await moveTests(analysis);
+      },
+      {
+        title: 'Integrating buttered-ember as test-runner',
+        task: async () => {
+
+        }
+      }
     },
   ]);
 }
@@ -208,16 +227,5 @@ async function verifyOptions(options) {
     let absolute = resolvedDirectory(options.directory);
 
     assert(path.resolve(absolute), `Directory, ${absolute}, does not exist.`);
-  }
-
-  if (options.noMonorepo) {
-    assert(
-      !options.addonLocation,
-      `--addon-location may not be used with --no-monorepo`
-    );
-    assert(
-      !options.testAppLocation,
-      `--test-app-location may not be used with --no-monorepo`
-    );
   }
 }

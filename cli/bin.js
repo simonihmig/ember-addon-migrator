@@ -115,7 +115,7 @@ yarg
       });
     },
     (args) => {
-      return run(args);
+      return run({ ...args, noMonorepo: !args.monorepo });
     }
   )
   .help().argv;

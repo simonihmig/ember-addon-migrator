@@ -26,7 +26,7 @@ export async function extractTests(
 ) {
   console.debug('To Debug:');
   console.debug(`  within: ${project.rootPath}`);
-  console.debug(`node ${binPath} extra-tests ${flags.join(' ')}`);
+  console.debug(`node ${binPath} extract-tests ${flags.join(' ')}`);
 
   let { stdout } = await execa('node', [binPath, 'extract-tests', ...flags], {
     cwd: project.rootPath,

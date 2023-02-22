@@ -96,3 +96,11 @@ This can be useful for development of the addon-migrator when trying on real pro
  - `pnpm`
  - cd to your v1 addon for testing
  - run `node ../path/to/ember-addon-migrator/bin.js`
+
+### Test with a fixture 
+
+ - `cd tests`
+ - Get list of fixtures via `pnpm dev list-fixtures`
+ - `pnpm dev output <fixture-name>`
+ - cd to the printed directory
+ - run `node ../path/to/ember-addon-migrator/bin.js`
