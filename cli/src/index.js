@@ -5,7 +5,7 @@ import assert from 'node:assert';
 import path from 'node:path';
 import util from 'node:util';
 
-import { migrateAddon } from './addon.js';
+import { migrateAddon, migrateFilesToNonMonorepo } from './addon.js';
 import { AddonInfo } from './analysis/index.js';
 import { resolvedDirectory } from './analysis/paths.js';
 import { lintFix } from './lint.js';
@@ -46,30 +46,11 @@ export default async function run(options) {
         title: 'Running Migrator',
         skip: () => options.analysisOnly,
         task: () => {
-          return new Listr([
-            {
-              title: `Moving addon to tmp directory, ${analysis.tmpLocation}`,
-              task: () => prepare(analysis),
-            },
-            {
-              title: 'Installing the V2 Addon Blueprint',
-              task: () => installV2Blueprint(analysis),
-            },
-            {
-              title: `Updating addon's root files`,
-              task: () => updateRootFiles(analysis),
-            },
-            {
-              title: 'Migrating addon files',
-              task: () => {
-                return migrateAddon(analysis);
-              },
-            },
-            {
-              title: 'Migrating test files',
-              task: () => migrateTestApp(analysis),
-            },
-          ]);
+          if (options.noMonorepo) {
+            return runSolorepoMigrator(analysis);
+          }
+
+          return runMonorepoMigrator(analysis);
         },
       },
       {
@@ -142,6 +123,56 @@ export default async function run(options) {
 }
 
 /**
+ * @param {AddonInfo} analysis
+ */
+function runMonorepoMigrator(analysis) {
+  return new Listr([
+    {
+      title: `Moving addon to tmp directory, ${analysis.tmpLocation}`,
+      task: () => prepare(analysis),
+    },
+    {
+      title: 'Installing the V2 Addon Blueprint',
+      task: () => installV2Blueprint(analysis),
+    },
+    {
+      title: `Updating addon's root files`,
+      task: () => updateRootFiles(analysis),
+    },
+    {
+      title: 'Migrating addon files',
+      task: () => {
+        return migrateAddon(analysis);
+      },
+    },
+    {
+      title: 'Migrating test files',
+      task: () => migrateTestApp(analysis),
+    },
+  ]);
+}
+
+/**
+ * @param {AddonInfo} analysis
+ */
+function runSolorepoMigrator(analysis) {
+  return new Listr([
+    {
+      title: `Moving addon to tmp directory, ${analysis.tmpLocation}`,
+      task: () => prepare(analysis),
+    },
+    {
+      title: 'Installing the V2 Addon Blueprint',
+      task: () => installV2Blueprint(analysis),
+    },
+    {
+      title: 'Migrating files',
+      task: () => migrateFilesToNonMonorepo(analysis),
+    },
+  ]);
+}
+
+/**
  * @param {import('./analysis/types').Options} options
  */
 async function verifyOptions(options) {
@@ -177,5 +208,16 @@ async function verifyOptions(options) {
     let absolute = resolvedDirectory(options.directory);
 
     assert(path.resolve(absolute), `Directory, ${absolute}, does not exist.`);
+  }
+
+  if (options.noMonorepo) {
+    assert(
+      !options.addonLocation,
+      `--addon-location may not be used with --no-monorepo`
+    );
+    assert(
+      !options.testAppLocation,
+      `--test-app-location may not be used with --no-monorepo`
+    );
   }
 }
