@@ -9,6 +9,7 @@ import util from 'node:util';
 
 import { AddonInfo } from '../analysis/index.js';
 import { resolvedDirectory } from '../analysis/paths.js';
+import { prepare } from '../prepare.js';
 import { error, info } from '../log.js';
 import { migrateTestApp } from '../test-app.js';
 
@@ -145,22 +146,24 @@ async function analyze(args) {
  * @param {AddonInfo} analysis
  */
 async function moveAddon(analysis) {
+  await prepare(analysis);
+
   await fs.rm(analysis.addonLocation, { force: true, recursive: true });
   await fs.ensureDir(analysis.addonLocation);
 
   let toMoveTo = path.relative(analysis.directory, analysis.addonLocation);
 
-  let paths = await globby(['*', '.*', '!.git', '!.github', `!${toMoveTo}`], {
+  let paths = await globby(['*', '.*', '!.git', '!.github', `!${toMoveTo}`, `!tests`], {
     expandDirectories: false,
-    cwd: analysis.directory,
+    cwd: analysis.tmpLocation,
     onlyFiles: false,
   });
 
   for (let filePath of paths) {
-    let source = path.join(analysis.directory, filePath);
+    let source = path.join(analysis.tmpLocation, filePath);
     let destination = path.join(analysis.addonLocation, filePath);
 
-    await fs.move(source, destination);
+    await fs.copy(source, destination, { recursive: true });
   }
 }
 

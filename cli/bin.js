@@ -75,8 +75,11 @@ yarg
       let testAppLocation =
         args.testAppLocation || (args.inPlace ? 'test-app' : '../test-app');
 
-      if (!args.inPlace && (await isSolorepo(args.directory))) {
+      let isSolo = await isSolorepo(args.directory);
+
+      if (!args.inPlace && isSolo) {
         args.inPlace = true;
+        testAppLocation = args.testAppLocation || 'test-app';
       }
 
       return extractTests({ ...args, testAppLocation });
