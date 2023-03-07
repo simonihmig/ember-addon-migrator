@@ -9,8 +9,8 @@ import util from 'node:util';
 
 import { AddonInfo } from '../analysis/index.js';
 import { resolvedDirectory } from '../analysis/paths.js';
-import { prepare } from '../prepare.js';
 import { error, info } from '../log.js';
+import { prepare } from '../prepare.js';
 import { migrateTestApp } from '../test-app.js';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
@@ -153,11 +153,14 @@ async function moveAddon(analysis) {
 
   let toMoveTo = path.relative(analysis.directory, analysis.addonLocation);
 
-  let paths = await globby(['*', '.*', '!.git', '!.github', `!${toMoveTo}`, `!tests`], {
-    expandDirectories: false,
-    cwd: analysis.tmpLocation,
-    onlyFiles: false,
-  });
+  let paths = await globby(
+    ['*', '.*', '!.git', '!.github', `!${toMoveTo}`, `!tests`],
+    {
+      expandDirectories: false,
+      cwd: analysis.tmpLocation,
+      onlyFiles: false,
+    }
+  );
 
   for (let filePath of paths) {
     let source = path.join(analysis.tmpLocation, filePath);
